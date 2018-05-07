@@ -18,8 +18,7 @@ public class MovieCrudApplication {
 	@Bean
 	public CommandLineRunner demo(MovieRepository repository) {
 		return (args) -> {
-			repository.save(new Movie("Avengers: Infinity War", 9 , "Pitkä elokuva, mutta silti näyttävä ja viihdyttävä läpi koko elokuvan"));
-			repository.save(new Movie("The Shawshank Redemption", 9, "Jännittävä"));
+
 			};	
 	}
 }

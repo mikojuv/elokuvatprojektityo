@@ -3,6 +3,9 @@
 
 <head>
 <title>React + Spring</title>
+
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+
 </head>
 
 <body>
@@ -19,283 +22,418 @@
 		src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	<link rel="stylesheet"
 		href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+		
 
 
 	<script type="text/babel">
 
-	class App extends React.Component {
-		  constructor(props) {
-		      super(props);
-
-			this.deleteMovie = this.deleteMovie.bind(this);
-			this.createMovie = this.createMovie.bind(this);
-			this.updateMovie = this.updateMovie.bind(this);
 
 
-		      this.state = {
-		          movies: [],
-				apiMovie: undefined
-		      };
-		   }
-	
-		  componentDidMount() {
-			this.loadMoviesFromServer();
-			this.fetchMovieDataFromApi();
-		  }
-		  
-		  loadMoviesFromServer() {
-		      fetch('http://localhost:8080/api/movies',
-				{credentials: 'same-origin'})
+
+
+class App extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.deleteMovie = this.deleteMovie.bind(this);
+		this.createMovie = this.createMovie.bind(this);
+		this.updateMovie = this.updateMovie.bind(this);
+		this.fetchMovieDataFromApi = this.fetchMovieDataFromApi.bind(this)
+		this.selectRatedMovie = this.selectRatedMovie.bind(this)
+
+		this.state = {
+			movies: [],
+			apiMovie: undefined,
+			selectedMovie: undefined,
+			ratedMovie: undefined
+		};
+	}
+
+	componentDidMount() {
+		this.loadMoviesFromServer();
+	}
+
+	movieAdded() {
+		this.setState({
+			selectedMovie: undefined,
+			apiMovie: undefined	
+		})
+		this.loadMoviesFromServer();
+	}
+
+	loadMoviesFromServer() {
+		fetch('http://localhost:8080/api/movies',
+			{ credentials: 'same-origin' })
 			.then((response) => response.json())
 			.then((responseData) => {
 				this.setState({
 					movies: responseData._embedded.movies,
-					});
 				});
-		}
+			});
+	}
 
-		fetchMovieDataFromApi() {
-		      fetch('http://www.omdbapi.com/?apikey=7e52f095&t=infinity%20war',
-				{credentials: 'same-origin'})
+
+	fetchMovieDataFromApi(title) {
+	//console.log(title);
+		fetch('http://www.omdbapi.com/?apikey=7e52f095&t=' + title,
+			{ credentials: 'same-origin' })
 			.then((response) => response.json())
 			.then((responseData) => {
+				//console.log(responseData)
 				this.setState({
 					apiMovie: responseData
-					});
 				});
-		}
-
-		// Delete movie
-  		deleteMovie(movie) {
-			fetch (movie._links.self.href, 
-    		{ method: 'DELETE',
-			  credentials: 'same-origin'})
-    		.then( 
-    			res => this.loadMoviesFromServer()
-    		)
-    		.catch( err => console.error(err))                
-		}
+			});
+	}
 
 
-
-		// Create movie
-		createMovie(movie) {
-		fetch ('http://localhost:8080/api/movies',
-    		{ method: 'POST',
-			credentials: 'same-origin',
-			headers: {'Content-Type': 'application/json'},
-			body: JSON.stringify(movie)
+	// Delete movie
+	deleteMovie(movie) {
+		fetch(movie._links.self.href,
+			{
+				method: 'DELETE',
+				credentials: 'same-origin'
 			})
-    		.then( 
-    			res => this.loadMoviesFromServer()
-    		)
-    		.catch( err => console.error(err))  
-		}
-
-		// Update movie	
-		updateMovie(movie) {
-		fetch(movie.link, 
-    {   method: 'PUT', 
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(movie)
-    })
-    .then( 
-        res => this.loadMoviesFromServer()
-    )
-    .catch( err => console.error(err))
-	}
-			  	
-		  render() {
-			console.log(this.state);
-		    return (
-		       <div>
-		         	<MovieTable deleteMovie={this.deleteMovie} updateMovie={this.updateMovie} movies={this.state.movies} />
-					<MovieForm createMovie={this.createMovie}/>
-				</div>
-		    );
-		  }
-		}
-		
-class MovieTable extends React.Component {
-		constructor(props) {
-			super(props);
-		}
-		    
-		render() {
-			var movies = this.props.movies.map(movie =>
-<Movie key={movie._links.self.href} movie={movie} updateMovie={this.props.updateMovie} deleteMovie={this.props.deleteMovie}/>
-			);
-
-	    	return (
-		<table className="table table-striped">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Rating</th>
-            <th>Comments</th>
-          </tr>
-        </thead>
-        <tbody>{movies}</tbody>
-    	</table>
-	     	);
-
-
-	  }
+			.then(
+				res => this.loadMoviesFromServer()
+			)
+			.catch(err => console.error(err))
 	}
 
-	class MovieForm extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-			title: '', 
-			rating: '', 
-			comments: ''
-			};
-        this.handleSubmit = this.handleSubmit.bind(this);   
-        this.handleChange = this.handleChange.bind(this);     
-    }
 
-    handleChange(event) {
-        this.setState(
-            {[event.target.name]: event.target.value}
-        );
-    }    
-    
-    handleSubmit(event) {
-        event.preventDefault();
-        
-	var newMovie = {title: this.state.title, rating: this.state.rating, comments: this.state.comments};
-  this.props.createMovie(newMovie);  
 
-          
-    }
-    
-    render() {
-        return (
-          <div >
-           <h1>Movies that I have rated</h1>   
-          <div className="panel panel-default">
-          <div className="panel-body">
-          <form className="form">
-        	<table className="table table-striped">
-        <thead>
-          <tr>
-        <th>Title</th>
-      <th>Rating</th>
-      <th>Comments</th>
-          </tr>
-        </thead>
-        <tr>
-		<td><input type="text" className="form-control"  name="title" onChange={this.handleChange}/> </td>
-		<td><input type="text" className="form-control" name="rating" onChange={this.handleChange}/></td>
- 		<td><input type="text" className="form-control" name="comments" onChange={this.handleChange}/></td>
-		<td> <button style={{backgroundColor:'green', marginLeft:5}} className="btn btn-primary" onClick={this.handleSubmit}>Submit movie</button></td>
+	// Create movie
+	createMovie(movie) {
+		fetch('http://localhost:8080/api/movies',
+			{
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(movie)
+			})
+			.then(
+				res => this.movieAdded()
+			)
+			.catch(err => console.error(err))
+	}
 
-		</tr>
-      </table>
-          </form>
-          </div>      
-          </div>
-            
+	// Update movie	
+	updateMovie(movie) {
+		fetch(movie.link,
+			{
+				method: 'PUT',
+				credentials: 'same-origin',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(movie)
+			})
+			.then(
+				res => this.loadMoviesFromServer()
+			)
+			.catch(err => console.error(err))
+	}
 
-          </div>   
-        );
-    }
+	//Add selected movie to the rating form
+	selectRatedMovie(movie) {
+		this.setState({
+			selectedMovie: movie
+		})
+	}
+
+	render() {
+	const selectedMovie = this.state.selectedMovie ? this.state.selectedMovie.Title : undefined
+	console.log('Selected MovieApp: ' + selectedMovie)
+		return (
+			<div>
+				<MovieSearch 
+					fetchMovieDataFromApi={this.fetchMovieDataFromApi} 
+					apiMovie={this.state.apiMovie}
+					selectRatedMovie={this.selectRatedMovie} />
+				
+				{
+				this.state.selectedMovie ? 
+				<MovieForm 
+					createMovie={this.createMovie}
+					selectedMovie={this.state.selectedMovie} />
+				: null
+				}
+
+				<MovieTable 
+					deleteMovie={this.deleteMovie} 
+					updateMovie={this.updateMovie} 
+					movies={this.state.movies} />
+			</div>
+		);
+	}
 }
 
-	class MovieUpdateForm extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-			title: this.props.movie.title, 
-			rating: this.props.movie.rating, 
+class MovieSearch extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			text: ''
+		}
+	}
+
+
+	fetchMovies(a) {
+		this.setState({
+			text: a
+		})
+
+		this.props.fetchMovieDataFromApi(this.state.text)
+	}
+
+	sendFetchData(movie) {
+		this.setState({
+			text: ''
+		})
+		this.props.fetchMovieDataFromApi('')
+		this.props.selectRatedMovie(movie)
+	}
+
+
+	render() {
+		const movie = this.props.apiMovie
+		return (
+			<div>
+				<h1>Search movie</h1>
+				<div>
+					<form className="form">
+						<table className="table table-striped">
+							<thead>
+								<tr>
+									<th>Title</th>
+								</tr>
+							</thead>
+							<tr>
+								<td><input type="text" value={this.state.text} className="form-control" name="title" placeholder='Movie name' onChange={e => this.fetchMovies(e.target.value)} /> </td>
+							</tr>
+						</table>
+					</form>
+				</div>
+				
+				<div className="searchedmovie" onClick={(e) => this.sendFetchData(movie)}>
+					{
+						movie ?
+							<div>
+							<div><img src= {movie.Poster}/></div>
+							<div><h2>{movie.Title}</h2></div>
+							<div>{}</div>
+							<div>{}</div>
+							<div>{}</div>
+							<div>{}</div>
+							</div>
+					
+					
+					: 
+					'No movies found'
+					}
+				</div>
+			</div>
+		)
+	}
+
+}
+
+class MovieForm extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+
+		};
+
+		this.handleSubmit = this.handleSubmit.bind(this);
+		this.handleChange = this.handleChange.bind(this);
+	}
+
+	handleChange(event) {
+		this.setState(
+			{ [event.target.name]: event.target.value }
+		);
+	}
+
+	handleSubmit(event) {
+		event.preventDefault();
+
+		var newMovie = { 
+				title: this.props.selectedMovie.Title,
+				rating: this.state.rating, 
+				comments: this.state.comments,
+				imdbRating: this.props.selectedMovie.imdbRating,
+				runtime: this.props.selectedMovie.Runtime,
+				year: this.props.selectedMovie.Year}; 
+
+		this.props.createMovie(newMovie);
+
+
+	}
+
+	render() {
+			console.log('Selected movieMovieForm: ')
+			console.log(this.props.selectedMovie)
+		return (
+			<div >
+				<h1>Rate this movie</h1>
+				<div className="juttu">
+					<div>
+						<div className='rated-movie-info'>
+							<div><img src={this.props.selectedMovie.Poster} /></div>
+							<div><h3>{this.props.selectedMovie.Title}</h3></div>
+						</div>
+						<form className="formi">
+							<table className="tableinputit">
+								<thead>
+									<tr>
+										<th>Rating</th>
+										<th>Comments</th>
+									</tr>
+								</thead>
+								<tr>
+									<td><input type="text" className="form-control" name="rating" onChange={this.handleChange} /></td>
+									<td><textarea type="text" className="form-control" name="comments" onChange={this.handleChange} /></td>
+									<td> <button className="btn btn-primary" onClick={this.handleSubmit}>Submit movie</button></td>
+
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+
+
+			</div>
+		);
+	}
+}
+
+class MovieTable extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+		var movies = this.props.movies.map(movie =>
+			<Movie key={movie._links.self.href} movie={movie} updateMovie={this.props.updateMovie} deleteMovie={this.props.deleteMovie} />
+		);
+
+		return (
+			<table className="table table-striped">
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th>Rating</th>
+						<th>Comments</th>
+						<th>IMDB Rating</th>
+						<th>Runtime</th>
+						<th>Year</th>
+					</tr>
+				</thead>
+				<tbody>{movies}</tbody>
+			</table>
+		);
+	}
+}
+
+class MovieUpdateForm extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			title: this.props.movie.title,
+			rating: this.props.movie.rating,
 			comments: this.props.movie.comments,
+			imdbRating: this.props.movie.imdbRating,
+			runtime: this.props.movie.runtime,
+			year: this.props.movie.year,
+			
 			editOpen: false
 		};
-        this.handleSubmit = this.handleSubmit.bind(this);   
-        this.handleChange = this.handleChange.bind(this);   
-		this.handleClick = this.handleClick.bind(this);   
+		this.handleSubmit = this.handleSubmit.bind(this);
+		this.handleChange = this.handleChange.bind(this);
+		this.handleClick = this.handleClick.bind(this);
 
-		}
+	}
 
-    handleChange(event) {
-        this.setState(
-            {[event.target.name]: event.target.value}
-        );
-    }    
+	handleChange(event) {
+		this.setState(
+			{ [event.target.name]: event.target.value }
+		);
+	}
 
 	handleClick() {
 		this.setState({
 			editOpen: !this.state.editOpen
 		})
 	}
-    
-    handleSubmit(event) {
-        event.preventDefault();
-        var updatedMovie = {link: this.props.movie._links.self.href ,title: this.state.title, rating: this.state.rating, comments: this.state.comments};
-        this.props.updateMovie(updatedMovie);      
-    }
 
-	render() {
-        return (
-			<div>
-			{ this.state.editOpen ?
-          	<div>
-                <div className="panel panel-default">
-                <div className="panel-heading">Edit Movie</div>
-              <div className="panel-body">
-				<button onClick={e => this.handleClick(e)}>Close edit</button>
-                <form className="form">
-                        <input type="text" className="form-control" name="title" value={this.state.title} onChange={this.handleChange}/>    
-                        <input type="text" className="form-control" name="rating" value={this.state.rating} onChange={this.handleChange}/>
-                        <input type="text" className="form-control" name="comments" value={this.state.comments} onChange={this.handleChange}/>
-                        <button className="btn btn-primary" onClick={this.handleSubmit}>Save</button>   
-                   
-                </form>
-                </div>      
-                </div>
-          	</div>
-			:
-			<button onClick={e => this.handleClick(e)}>Edit movie</button>
-			} 
-		</div>  
-        );
-    }
-}
-		        
-	class Movie extends React.Component {
-	    constructor(props) {
-	        super(props);
-
-			this.deleteMovie = this.deleteMovie.bind(this);
-	    }
-
-		deleteMovie() {
-        	this.props.deleteMovie(this.props.movie);
-		} 
-	 
-	    render() {
-	        return (
-			<tr>
-        		<td>{this.props.movie.title}</td>
-        		<td>{this.props.movie.rating}</td>
-        		<td>{this.props.movie.comments}</td>
-
-				<td>
-					<MovieUpdateForm updateMovie={this.props.updateMovie} movie = {this.props.movie}/>
-				</td>
-
-    		<td><button className="btn btn-danger" onClick={this.deleteMovie}>Delete</button></td> 
-			</tr>
-	        );
-	    } 
-
+	handleSubmit(event) {
+		event.preventDefault();
+		var updatedMovie = { link: this.props.movie._links.self.href, title: this.state.title, rating: this.state.rating, comments: this.state.comments, imdbRating: this.state.imdbRating, runtime: this.state.runtime, year: this.state.year};
+		this.props.updateMovie(updatedMovie);
 	}
 
-	ReactDOM.render(<App />, document.getElementById('root') );	
+	render() {
+		return (
+			<div>
+				{this.state.editOpen ?
+					<div>
+						<div className="panel panel-default">
+							<div className="panel-heading">Edit Movie</div>
+							<div className="panel-body">
+								<button className="btn btn-primary" onClick={e => this.handleClick(e)}>Close edit</button>
+								<form className="form">
+									<input type="text" className="form-control" name="rating" value={this.state.rating} onChange={this.handleChange} />
+									<input type="text" className="form-control" name="comments" value={this.state.comments} onChange={this.handleChange} />
+									<button className="btn btn-primary" onClick={this.handleSubmit}>Save</button>
+
+								</form>
+							</div>
+						</div>
+					</div>
+					:
+					<button className="btn btn-primary" onClick={e => this.handleClick(e)}>Edit movie</button>
+				}
+			</div>
+		);
+	}
+}
+
+
+class Movie extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.deleteMovie = this.deleteMovie.bind(this);
+	}
+
+	deleteMovie() {
+		this.props.deleteMovie(this.props.movie);
+	}
+
+	render() {
+		return (
+			<tr>
+				<td>{this.props.movie.title}</td>
+				<td>{this.props.movie.rating}</td>
+				<td>{this.props.movie.comments}</td>
+				<td>{this.props.movie.imdbRating}</td>
+				<td>{this.props.movie.runtime}</td>
+				<td>{this.props.movie.year}</td>
+
+				<td>
+					<MovieUpdateForm updateMovie={this.props.updateMovie} movie={this.props.movie} />
+				</td>
+
+				<td><button className="btn btn-danger" onClick={this.deleteMovie}>Delete</button></td>
+			</tr>
+		);
+	}
+
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+
 	</script>
 
 </body>

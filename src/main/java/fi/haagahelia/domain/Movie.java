@@ -14,14 +14,22 @@ public class Movie {
 	private String title;
 	private int rating;
 	private String comments;
+	
+	private String imdbRating;
+	private String runtime;
+	private String year;
+	
 
 	public Movie() {
 	}
 	
-	public Movie(String title, int rating, String comments) {
+	public Movie(String title, int rating, String comments, String imdbRating, String runtime, String year) {
 		this.title = title;
 		this.rating = rating;
 		this.comments = comments;
+		this.imdbRating = imdbRating;
+		this.runtime = runtime;
+		this.year = year;
 	}
 
 	public Long getId() {
@@ -41,6 +49,18 @@ public class Movie {
 		return comments;
 	}
 	
+	public String getimdbRating() {
+		return imdbRating;
+	}
+	
+	public String getRuntime() {
+		return runtime;
+	}
+	
+	public String getYear() {
+		return year;
+	}
+	
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -56,10 +76,22 @@ public class Movie {
 	public void setComments(String comments) {
 		this.comments = comments;
 	}
+	
+	public void setimdbRating(String imdbRating) {
+		this.imdbRating = imdbRating;
+	}
+	
+	public void setRuntime(String runtime) {
+		this.runtime = runtime;
+	}
+	
+	public void setYear(String year) {
+		this.year = year;
+	}
 
 	@Override
 	public String toString() {
-		return "Movie [Title=" + title + ", Rating=" + rating + ", Comments=" + comments + "]";
+		return "Movie [Title=" + title + ", Rating=" + rating + ", Comments=" + comments + ", imdbRating=" + imdbRating + ", Runtime=" + runtime + ", Year=" + year + "]";
 	}
 	
 	
